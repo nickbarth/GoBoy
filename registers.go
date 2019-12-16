@@ -24,7 +24,7 @@ func NewRegisters() *Registers {
   }
 }
 
-func (r *Registers) set16(reg16 string, val int16) {
+func (r *Registers) set16(reg16 string, val uint16) {
   switch reg16 {
     case "af":
       r.a = uint8(val >> 8)
@@ -44,13 +44,13 @@ func (r *Registers) set16(reg16 string, val int16) {
 func (r Registers) get16(reg16 string) uint16 {
   switch reg16 {
   case "af":
-    return uint16((r.a << 8) | r.f)
+    return uint16(r.a) << 8 | uint16(r.f)
   case "bc":
-    return uint16((r.b << 8) | r.c)
+    return uint16(r.b) << 8 | uint16(r.c)
   case "de":
-    return uint16((r.d << 8) | r.e)
+    return uint16(r.d) << 8 | uint16(r.e)
   case "hl":
-    return uint16((r.h << 8) | r.l)
+    return uint16(r.h) << 8 | uint16(r.l)
   }
   return 0;
 }
