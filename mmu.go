@@ -14,7 +14,7 @@ func NewMMU() *MMU {
 
 func (m *MMU) Load(file string) {
   dat, _ := ioutil.ReadFile(file)
-  m.ram = append(dat, make([]byte, 0xffff)...) // fix
+  m.ram = append(dat, make([]byte, 0xffff)...) // hack
 }
 
 func (m *MMU) Read(addr uint16) byte {

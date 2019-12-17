@@ -56,6 +56,7 @@ func (r Registers) get16(reg16 string) uint16 {
 }
 
 // flag register
+// z n h c 0 0 0 0
 // z - zero flag
 // n - substract flag
 // h - half carry flag
@@ -64,17 +65,17 @@ func (r Registers) get16(reg16 string) uint16 {
 func (r *Registers) setFlag(flag byte, val bool) {
   switch flag {
   case 'z':
-    if val { r.f = r.f | 0b1000_0000
-    } else { r.f = r.f & 0b0111_0000 }
+    if val { r.f = r.f |  (1 << 7)
+    } else { r.f = r.f &^ (1 << 7) }
   case 'n':
-    if val { r.f = r.f | 0b0100_0000
-    } else { r.f = r.f & 0b1011_0000 }
+    if val { r.f = r.f |  (1 << 6)
+    } else { r.f = r.f &^ (1 << 6) }
   case 'h':
-    if val { r.f = r.f | 0b0010_0000
-    } else { r.f = r.f & 0b1101_0000 }
+    if val { r.f = r.f |  (1 << 5)
+    } else { r.f = r.f &^ (1 << 5) }
   case 'c':
-    if val { r.f = r.f | 0b0001_0000
-    } else { r.f = r.f & 0b1110_0000 }
+    if val { r.f = r.f |  (1 << 4)
+    } else { r.f = r.f &^ (1 << 4) }
   }
 }
 
@@ -83,11 +84,11 @@ func (r *Registers) getFlag(flag byte) bool {
   case 'z':
     return r.f >> 7 == 1
   case 'n':
-    return r.f & 0b0100_0000 >> 6 == 1
+    return r.f & (1 << 6) >> 6 == 1
   case 'h':
-    return r.f & 0b0100_0000 >> 5 == 1
+    return r.f & (1 << 5) >> 5 == 1
   case 'c':
-    return r.f & 0b0100_0000 >> 4 == 1
+    return r.f & (1 << 4) >> 4 == 1
   }
   return false
 }

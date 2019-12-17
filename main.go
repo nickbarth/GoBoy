@@ -2,9 +2,9 @@ package main
 
 func main() {
   var cpu = NewCPU()
-  cpu.mmu.Load("./test.gb")
+  cpu.mmu.Load("./bios.bin")
 
-  for n := 0; n < 10; n++ {
-    cpu.Step(n)
+  for n := 0; n < 30; n++ {
+    cpu.Step(cpu.pc)
   }
 }
