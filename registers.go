@@ -24,7 +24,7 @@ func NewRegisters() *Registers {
   }
 }
 
-func (r *Registers) set16(reg16 string, val uint16) {
+func (r *Registers) Set16(reg16 string, val uint16) {
   switch reg16 {
     case "af":
       r.a = uint8(val >> 8)
@@ -41,7 +41,7 @@ func (r *Registers) set16(reg16 string, val uint16) {
   }
 }
 
-func (r Registers) get16(reg16 string) uint16 {
+func (r Registers) Get16(reg16 string) uint16 {
   switch reg16 {
   case "af":
     return uint16(r.a) << 8 | uint16(r.f)
@@ -62,7 +62,7 @@ func (r Registers) get16(reg16 string) uint16 {
 // h - half carry flag
 // c - carry flag
 
-func (r *Registers) setFlag(flag byte, val bool) {
+func (r *Registers) SetFlag(flag byte, val bool) {
   switch flag {
   case 'z':
     if val { r.f = r.f |  (1 << 7)
@@ -79,7 +79,7 @@ func (r *Registers) setFlag(flag byte, val bool) {
   }
 }
 
-func (r *Registers) getFlag(flag byte) bool {
+func (r *Registers) GetFlag(flag byte) bool {
   switch flag {
   case 'z':
     return r.f >> 7 == 1
@@ -91,4 +91,18 @@ func (r *Registers) getFlag(flag byte) bool {
     return r.f & (1 << 4) >> 4 == 1
   }
   return false
+}
+
+func (r *Registers) GetFlagVal(flag byte) uint8 {
+  switch flag {
+  case 'z':
+    return r.f >> 7
+  case 'n':
+    return r.f & (1 << 6) >> 6
+  case 'h':
+    return r.f & (1 << 5) >> 5
+  case 'c':
+    return r.f & (1 << 4) >> 4
+  }
+  return 0
 }

@@ -23,6 +23,9 @@ func NewCPU() *CPU {
 func (cpu *CPU) Step(n uint16) {
   opcode := cpu.mmu.Read(cpu.pc)
 
+  // fmt.Printf("-- 0x%0x -- \n", cpu.sp)
+  fmt.Printf("0x%0x\t", opcode)
+
   switch opcode {
   case 0x00:
     // nop
@@ -123,6 +126,21 @@ func (cpu *CPU) Step(n uint16) {
     cpu.reg.Set16("hl", uint16(cpu.mmu.ReadWord(cpu.pc + 1)))
     fmt.Printf("0x%0x:\tld hl 0x%x\n", n, cpu.mmu.ReadWord(cpu.pc + 1))
     cpu.pc += 3
+
+  case 0x22:
+    // ldi (hl) hl -- gb sp
+    cpu.t += 8
+    cpu.mmu.Write(cpu.reg.Get16("hl"), cpu.reg.a)
+    fmt.Printf("0x%0x:\tldi (hl) a\n", n)
+    cpu.pc += 1
+
+  case 0x23:
+    // inc hl
+    cpu.t += 8
+    hl := cpu.reg.Get16("hl")
+    cpu.reg.Set16("hl", hl+1)
+    fmt.Printf("0x%0x:\thl inc\n", n)
+    cpu.pc += 1
 
   case 0x31:
     // ld sp nnnn
@@ -233,6 +251,13 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("0x%0x:\tpush bc --\n", n)
     cpu.sp -= 2
     cpu.pc += 1
+
+  case 0xc9:
+    // ret
+    cpu.t += 16
+    fmt.Printf("0x%0x:\tret\n", n)
+    cpu.pc = uint16(cpu.mmu.ReadWord(cpu.sp))
+    cpu.sp += 2
 
   case 0xcd:
     // call nnnn
