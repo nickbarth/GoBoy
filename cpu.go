@@ -20,6 +20,23 @@ func NewCPU() *CPU {
   }
 }
 
+func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
+  result := reg1 ^ reg2
+  cpu.reg.SetFlag('z', result == 0)
+  cpu.reg.SetFlag('n', false)
+  cpu.reg.SetFlag('h', false)
+  cpu.reg.SetFlag('c', false)
+  return result
+}
+
+func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
+  bit := reg & (1 << b) >> b
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', false)
+  cpu.reg.SetFlag('h', true)
+  return bit
+}
+
 func (cpu *CPU) Step(n uint16) {
   opcode := cpu.mmu.Read(cpu.pc)
 
@@ -198,8 +215,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0xaf:
     // xor a
     cpu.t += 4
-    cpu.reg.a = 0
-    cpu.reg.f = 0x80
+    cpu.reg.a = cpu.XOR(cpu.reg.a, cpu.reg.a)
     fmt.Printf("xor a")
     cpu.pc += 1
 
@@ -230,10 +246,7 @@ func (cpu *CPU) Step(n uint16) {
     case 0x7c:
       // bit 7 h
       cpu.t += 8
-      bit := cpu.reg.h & (1 << 6) >> 6
-      cpu.reg.SetFlag('z', bit == 0)
-      cpu.reg.SetFlag('n', false)
-      cpu.reg.SetFlag('h', false)
+      cpu.BIT(7, cpu.reg.a)
       fmt.Printf("bit 7 h")
       cpu.pc += 2
 
