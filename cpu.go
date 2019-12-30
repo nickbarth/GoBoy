@@ -20,6 +20,7 @@ func NewCPU() *CPU {
   }
 }
 
+// cpu instr
 func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
   result := reg1 ^ reg2
   cpu.reg.SetFlag('z', result == 0)
@@ -37,6 +38,56 @@ func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
   return bit
 }
 
+func (cpu *CPU) INC(reg uint8) uint8 {
+  bit := uint8((reg + 1) & 0xff)
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', false)
+  cpu.reg.SetFlag('h', (bit & 0xF) == 0)
+  return bit
+}
+
+func (cpu *CPU) INC16(reg uint16) uint16 {
+  bit := uint16((reg + 1) & 0xffff)
+  return bit
+}
+
+func (cpu *CPU) DEC(reg uint8) uint8 {
+  bit := uint8((reg - 1) & 0xff)
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', true)
+  cpu.reg.SetFlag('h', (bit & 0xF) == 0xf)
+  return bit
+}
+
+func (cpu *CPU) RL(reg uint8) uint8 {
+  bit := reg << 1 & 0xff
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', false)
+  cpu.reg.SetFlag('h', false)
+  cpu.reg.SetFlag('c', (reg << 1) >> 8 == 1)
+  return bit
+}
+
+func (cpu *CPU) RR(reg uint8) uint8 {
+  bit := reg >> 1
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', false)
+  cpu.reg.SetFlag('h', false)
+  cpu.reg.SetFlag('c', reg & 1 == 1)
+  return bit
+}
+
+func (cpu *CPU) POP() uint16 {
+    bit := cpu.mmu.ReadWord(cpu.sp)
+    cpu.sp += 2
+    return bit
+}
+
+func (cpu *CPU) PUSH(val uint16) {
+    cpu.sp -= 2
+    cpu.mmu.WriteWord(cpu.sp, val)
+}
+
 func (cpu *CPU) Step(n uint16) {
   opcode := cpu.mmu.Read(cpu.pc)
 
@@ -52,12 +103,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x05:
     // dec b
     cpu.t += 4
-    cpu.reg.b -= 1
-
-    cpu.reg.SetFlag('z', cpu.reg.b == 0)
-    cpu.reg.SetFlag('n', true)
-    cpu.reg.SetFlag('h', cpu.reg.b & 0x10 == 0x10)
-
+    cpu.reg.b = cpu.DEC(cpu.reg.b)
     fmt.Printf("dec b")
     cpu.pc += 1
 
@@ -89,7 +135,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x0c:
     // inc c
     cpu.t += 4
-    cpu.reg.c += 1
+    cpu.reg.c = cpu.INC(cpu.reg.c)
     fmt.Printf("inc c")
     cpu.pc += 1
 
@@ -117,11 +163,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x1f:
     // rra
     cpu.t += 4
-    cpu.reg.SetFlag('n', false)
-    cpu.reg.SetFlag('h', false)
-    c := cpu.reg.GetFlagVal('c')
-    cpu.reg.SetFlag('c', cpu.reg.a & 1 == 1)
-    cpu.reg.a = cpu.reg.a >> 1 | (c << 7)
+    cpu.reg.a = cpu.RR(cpu.reg.a)
     fmt.Printf("rra")
     cpu.pc += 1
 
@@ -154,7 +196,7 @@ func (cpu *CPU) Step(n uint16) {
     // inc hl
     cpu.t += 8
     hl := cpu.reg.Get16("hl")
-    cpu.reg.Set16("hl", hl+1)
+    cpu.reg.Set16("hl", cpu.INC16(hl))
     fmt.Printf("hl inc")
     cpu.pc += 1
 
@@ -222,8 +264,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0xc1:
     // pop bc
     cpu.t += 12
-    cpu.reg.Set16("bc", cpu.sp)
-    cpu.sp += 2
+    cpu.reg.Set16("bc", cpu.POP())
     fmt.Printf("pop bc")
     cpu.pc += 1
 
@@ -235,11 +276,7 @@ func (cpu *CPU) Step(n uint16) {
     case 0x11:
       // rl c
       cpu.t += 8
-      cpu.reg.SetFlag('n', false)
-      cpu.reg.SetFlag('h', false)
-      c := cpu.reg.GetFlagVal('c')
-      cpu.reg.SetFlag('c', cpu.reg.c & (1 << 7) >> 7 == 1)
-      cpu.reg.c = cpu.reg.c << 1 | c
+      cpu.reg.c = cpu.RL(cpu.reg.c)
       fmt.Printf("rl c")
       cpu.pc += 2
 
@@ -258,10 +295,8 @@ func (cpu *CPU) Step(n uint16) {
   case 0xc5:
     // push bc
     cpu.t += 16
-    bc := cpu.reg.Get16("bc")
-    cpu.mmu.WriteWord(cpu.sp - 2, bc)
-    fmt.Printf("push bc --")
-    cpu.sp -= 2
+    cpu.PUSH(cpu.reg.Get16("bc"))
+    fmt.Printf("push bc")
     cpu.pc += 1
 
   case 0xc9:
