@@ -52,9 +52,9 @@ func (cpu *CPU) INC(reg uint8) uint8 {
   return val
 }
 
-func (cpu *CPU) INC16(reg uint16) uint16 {
-  val := uint16((reg + 1) & 0xffff)
-  return val
+func (cpu *CPU) INC16(reg string) {
+  val := cpu.reg.Get16(reg)
+  cpu.reg.Set16(reg, uint16((val + 1) & 0xffff))
 }
 
 func (cpu *CPU) DEC(reg uint8) uint8 {
@@ -173,6 +173,13 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("ld de 0x%x", cpu.mmu.ReadWord(cpu.pc + 1))
     cpu.pc += 3
 
+  case 0x13:
+    // inc de
+    cpu.t += 8
+    cpu.INC16("de")
+    fmt.Printf("inc de")
+    cpu.pc += 1
+
   case 0x1a:
     // ld a,de
     cpu.t += 8
@@ -215,8 +222,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x23:
     // inc hl
     cpu.t += 8
-    hl := cpu.reg.Get16("hl")
-    cpu.reg.Set16("hl", cpu.INC16(hl))
+    cpu.INC16("hl")
     fmt.Printf("hl inc")
     cpu.pc += 1
 
@@ -257,6 +263,13 @@ func (cpu *CPU) Step(n uint16) {
     cpu.mmu.Write(hl, cpu.reg.a)
     cpu.reg.Set16("hl", hl - 1)
     fmt.Printf("ld (hl-) a")
+    cpu.pc += 1
+
+  case 0x7b:
+    // ld a e
+    cpu.t += 4
+    cpu.reg.a = cpu.reg.e
+    fmt.Printf("ld a e")
     cpu.pc += 1
 
   case 0x9c:
@@ -337,6 +350,13 @@ func (cpu *CPU) Step(n uint16) {
 
   case 0xe2:
     // ld (FF00 + c) a -- gb sp
+    cpu.t += 8
+    cpu.mmu.Write(0xff00 + uint16(cpu.reg.c), cpu.reg.a)
+    fmt.Printf("ld (0xff00 + c) a")
+    cpu.pc += 1
+
+  case 0xfe:
+    // cp a n
     cpu.t += 8
     cpu.mmu.Write(0xff00 + uint16(cpu.reg.c), cpu.reg.a)
     fmt.Printf("ld (0xff00 + c) a")
