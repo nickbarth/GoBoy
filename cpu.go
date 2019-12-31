@@ -23,7 +23,9 @@ func NewCPU() *CPU {
 // cpu instr
 func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
   val := reg1 ^ reg2
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', false)
@@ -32,7 +34,9 @@ func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
 
 func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
   val := reg & (1 << b) >> b
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', true)
   return val
@@ -40,7 +44,9 @@ func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
 
 func (cpu *CPU) INC(reg uint8) uint8 {
   val := uint8((reg + 1) & 0xff)
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', (val & 0xF) == 0)
   return val
@@ -53,7 +59,9 @@ func (cpu *CPU) INC16(reg uint16) uint16 {
 
 func (cpu *CPU) DEC(reg uint8) uint8 {
   val := uint8((reg - 1) & 0xff)
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', true)
   cpu.reg.SetFlag('h', (val & 0xF) == 0xf)
   return val
@@ -62,7 +70,9 @@ func (cpu *CPU) DEC(reg uint8) uint8 {
 func (cpu *CPU) SBC(reg1 uint8, reg2 uint8) uint8 {
   c := cpu.reg.GetFlagVal('c')
   val := reg1 - reg2 - c
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', true)
   cpu.reg.SetFlag('h', (reg1 & 0xF) - (reg2 & 0xF) - c < 0x0)
   cpu.reg.SetFlag('c', reg2 + c > reg1)
@@ -71,7 +81,9 @@ func (cpu *CPU) SBC(reg1 uint8, reg2 uint8) uint8 {
 
 func (cpu *CPU) RL(reg uint8) uint8 {
   val := reg << 1 & 0xff
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', (reg << 1) >> 8 == 1)
@@ -80,7 +92,9 @@ func (cpu *CPU) RL(reg uint8) uint8 {
 
 func (cpu *CPU) RR(reg uint8) uint8 {
   val := reg >> 1
-  cpu.reg.SetFlag('z', val == 0)
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', reg & 1 == 1)
@@ -309,7 +323,7 @@ func (cpu *CPU) Step(n uint16) {
     cpu.t += 24
     cpu.mmu.WriteWord(cpu.sp - 2, cpu.pc + 3)
     nn := uint16(cpu.mmu.ReadWord(cpu.pc + 1))
-    fmt.Printf("call 0x%x ==", nn)
+    fmt.Printf("call 0x%x", nn)
     cpu.sp -= 2
     cpu.pc = nn
 

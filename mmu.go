@@ -67,7 +67,7 @@ func (m *MMU) Read(addr uint16) byte {
 }
 
 func (m *MMU) ReadWord(addr uint16) uint16 {
-  return uint16(m.Read(addr)) | uint16(m.Read(addr+1)) << 8
+  return uint16(m.Read(addr)) | uint16(m.Read(addr+1) << 4)
 }
 
 func (m *MMU) Write(addr uint16, val byte) {
@@ -75,6 +75,6 @@ func (m *MMU) Write(addr uint16, val byte) {
 }
 
 func (m *MMU) WriteWord(addr uint16, val uint16) {
-  m.ram[addr] = byte(val >> 4)
-  m.ram[addr+1] = byte(val & 0b0000_1111)
+  m.Write(addr+1, byte(val >> 4))
+  m.Write(addr, byte(val & 0xf))
 }
