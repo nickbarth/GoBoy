@@ -59,6 +59,16 @@ func (cpu *CPU) DEC(reg uint8) uint8 {
   return bit
 }
 
+func (cpu *CPU) SBC(reg1 uint8, reg2 uint8) uint8 {
+  c := cpu.reg.GetFlagVal('c')
+  bit := reg1 - reg2 - c
+  cpu.reg.SetFlag('z', bit == 0)
+  cpu.reg.SetFlag('n', true)
+  cpu.reg.SetFlag('h', (reg1 & 0xF) - (reg2 & 0xF) - c < 0x0)
+  cpu.reg.SetFlag('c', reg2 + c > reg1)
+  return bit & 0xFF
+}
+
 func (cpu *CPU) RL(reg uint8) uint8 {
   bit := reg << 1 & 0xff
   cpu.reg.SetFlag('z', bit == 0)
@@ -124,11 +134,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x17:
     // rla
     cpu.t += 4
-    cpu.reg.SetFlag('n', false)
-    cpu.reg.SetFlag('h', false)
-    c := cpu.reg.GetFlagVal('c')
-    cpu.reg.SetFlag('c', cpu.reg.a & (1 << 7) >> 7 == 1)
-    cpu.reg.a = cpu.reg.a << 1 | c
+    cpu.reg.a = cpu.RL(cpu.reg.a)
     fmt.Printf("rla")
     cpu.pc += 1
 
@@ -242,15 +248,7 @@ func (cpu *CPU) Step(n uint16) {
   case 0x9c:
     // sbc a h
     cpu.t += 4
-    val := cpu.reg.h + cpu.reg.GetFlagVal('c')
-
-    cpu.reg.SetFlag('z', val == cpu.reg.a)
-    cpu.reg.SetFlag('n', true)
-    cpu.reg.SetFlag('c', val > cpu.reg.a)
-
-    cpu.reg.a -=  val
-
-    cpu.reg.SetFlag('h', cpu.reg.a & 0x10 == 0x10)
+    cpu.reg.a = cpu.SBC(cpu.reg.a, cpu.reg.h)
     fmt.Printf("sbc a h")
     cpu.pc += 1
 
