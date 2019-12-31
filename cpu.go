@@ -22,75 +22,75 @@ func NewCPU() *CPU {
 
 // cpu instr
 func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
-  result := reg1 ^ reg2
-  cpu.reg.SetFlag('z', result == 0)
+  val := reg1 ^ reg2
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', false)
-  return result
+  return val
 }
 
 func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
-  bit := reg & (1 << b) >> b
-  cpu.reg.SetFlag('z', bit == 0)
+  val := reg & (1 << b) >> b
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', true)
-  return bit
+  return val
 }
 
 func (cpu *CPU) INC(reg uint8) uint8 {
-  bit := uint8((reg + 1) & 0xff)
-  cpu.reg.SetFlag('z', bit == 0)
+  val := uint8((reg + 1) & 0xff)
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', false)
-  cpu.reg.SetFlag('h', (bit & 0xF) == 0)
-  return bit
+  cpu.reg.SetFlag('h', (val & 0xF) == 0)
+  return val
 }
 
 func (cpu *CPU) INC16(reg uint16) uint16 {
-  bit := uint16((reg + 1) & 0xffff)
-  return bit
+  val := uint16((reg + 1) & 0xffff)
+  return val
 }
 
 func (cpu *CPU) DEC(reg uint8) uint8 {
-  bit := uint8((reg - 1) & 0xff)
-  cpu.reg.SetFlag('z', bit == 0)
+  val := uint8((reg - 1) & 0xff)
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', true)
-  cpu.reg.SetFlag('h', (bit & 0xF) == 0xf)
-  return bit
+  cpu.reg.SetFlag('h', (val & 0xF) == 0xf)
+  return val
 }
 
 func (cpu *CPU) SBC(reg1 uint8, reg2 uint8) uint8 {
   c := cpu.reg.GetFlagVal('c')
-  bit := reg1 - reg2 - c
-  cpu.reg.SetFlag('z', bit == 0)
+  val := reg1 - reg2 - c
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', true)
   cpu.reg.SetFlag('h', (reg1 & 0xF) - (reg2 & 0xF) - c < 0x0)
   cpu.reg.SetFlag('c', reg2 + c > reg1)
-  return bit & 0xFF
+  return val & 0xFF
 }
 
 func (cpu *CPU) RL(reg uint8) uint8 {
-  bit := reg << 1 & 0xff
-  cpu.reg.SetFlag('z', bit == 0)
+  val := reg << 1 & 0xff
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', (reg << 1) >> 8 == 1)
-  return bit
+  return val
 }
 
 func (cpu *CPU) RR(reg uint8) uint8 {
-  bit := reg >> 1
-  cpu.reg.SetFlag('z', bit == 0)
+  val := reg >> 1
+  cpu.reg.SetFlag('z', val == 0)
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', false)
   cpu.reg.SetFlag('c', reg & 1 == 1)
-  return bit
+  return val
 }
 
 func (cpu *CPU) POP() uint16 {
-    bit := cpu.mmu.ReadWord(cpu.sp)
+    val := cpu.mmu.ReadWord(cpu.sp)
     cpu.sp += 2
-    return bit
+    return val
 }
 
 func (cpu *CPU) PUSH(val uint16) {
