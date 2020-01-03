@@ -67,6 +67,14 @@ func (cpu *CPU) DEC(reg byte) {
   cpu.reg.Set(reg, val)
 }
 
+func (cpu *CPU) LD_REG(reg1 byte, reg2 byte) {
+  cpu.reg.Set(reg1, cpu.reg.Get(reg2))
+}
+
+func (cpu *CPU) LD_VAL(reg1 byte, val uint8) {
+  cpu.reg.Set(reg1, val)
+}
+
 func (cpu *CPU) DEC16(reg string) {
   val := cpu.reg.Get16(reg)
   cpu.reg.Set16(reg, val - 1)
@@ -215,10 +223,32 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("inc de")
     cpu.pc += 1
 
-  case 0x1a:
-    // ld a,de
+  case 0x15:
+    // dec d
+    cpu.t += 4
+    cpu.DEC('d')
+    fmt.Printf("dec d")
+    cpu.pc += 1
+
+  case 0x16:
+    // ld d nn
     cpu.t += 8
-    cpu.reg.a = cpu.mmu.Read(cpu.pc + 1)
+    nn := cpu.mmu.Read(cpu.pc + 1)
+    cpu.LD_VAL('d', nn)
+    fmt.Printf("ld d 0x%x", nn)
+    cpu.pc += 2
+
+  case 0x18:
+    // jr nn
+    cpu.t += 12
+    nn := cpu.mmu.Read(cpu.pc + 1)
+    fmt.Printf("jr 0x%x", nn)
+    cpu.pc += uint16(nn)
+
+  case 0x1a:
+    // ld a de
+    cpu.t += 8
+    cpu.reg.a = cpu.mmu.Read(cpu.reg.Get16("de"))
     fmt.Printf("ld a de")
     cpu.pc += 1
 
@@ -334,29 +364,29 @@ func (cpu *CPU) Step(n uint16) {
   case 0x4f:
     // ld c a
     cpu.t += 4
-    cpu.reg.c = cpu.reg.a
+    cpu.LD_REG('c', 'a')
     fmt.Printf("ld c a")
     cpu.pc += 1
 
   case 0x57:
     // ld d a
     cpu.t += 4
-    cpu.reg.d = cpu.reg.a
+    cpu.LD_REG('d', 'a')
     fmt.Printf("ld d a")
     cpu.pc += 1
 
   case 0x62:
     // ld h c
-    cpu.t += 12
-    cpu.sp = uint16(cpu.mmu.ReadWord(cpu.pc + 1))
-    fmt.Printf("ld c h")
-    cpu.pc += 3
+    cpu.t += 4
+    cpu.LD_REG('h', 'c')
+    fmt.Printf("ld h c")
+    cpu.pc += 1
 
   case 0x67:
     // ld h a
     cpu.t += 4
-    cpu.reg.h = cpu.reg.a
-    fmt.Printf("ld a h")
+    cpu.LD_REG('h', 'a')
+    fmt.Printf("ld h a")
     cpu.pc += 1
 
   case 0x77:
@@ -371,8 +401,15 @@ func (cpu *CPU) Step(n uint16) {
   case 0x7b:
     // ld a e
     cpu.t += 4
-    cpu.reg.a = cpu.reg.e
+    cpu.LD_REG('a', 'e')
     fmt.Printf("ld a e")
+    cpu.pc += 1
+
+  case 0x7c:
+    // ld a h
+    cpu.t += 4
+    cpu.LD_REG('a', 'h')
+    fmt.Printf("ld a h")
     cpu.pc += 1
 
   case 0x90:
