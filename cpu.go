@@ -42,14 +42,14 @@ func (cpu *CPU) BIT(b uint8, reg uint8) uint8 {
   return val
 }
 
-func (cpu *CPU) INC(reg uint8) uint8 {
-  val := uint8((reg + 1) & 0xff)
+func (cpu *CPU) INC(reg byte) {
+  val := uint8((cpu.reg.Get(reg) + 1) & 0xff)
   if val == 0 {
    cpu.reg.SetFlag('z', true)
   }
   cpu.reg.SetFlag('n', false)
   cpu.reg.SetFlag('h', (val & 0xF) == 0)
-  return val
+  cpu.reg.Set(reg, val)
 }
 
 func (cpu *CPU) INC16(reg string) {
@@ -57,21 +57,42 @@ func (cpu *CPU) INC16(reg string) {
   cpu.reg.Set16(reg, uint16((val + 1) & 0xffff))
 }
 
-func (cpu *CPU) DEC(reg uint8) uint8 {
-  val := uint8((reg - 1) & 0xff)
+func (cpu *CPU) DEC(reg byte) {
+  val := uint8((cpu.reg.Get(reg) - 1) & 0xff)
   if val == 0 {
    cpu.reg.SetFlag('z', true)
   }
   cpu.reg.SetFlag('n', true)
   cpu.reg.SetFlag('h', (val & 0xF) == 0xf)
-  return val
+  cpu.reg.Set(reg, val)
+}
+
+func (cpu *CPU) DEC16(reg string) {
+  val := cpu.reg.Get16(reg)
+  cpu.reg.Set16(reg, val - 1)
+}
+
+func (cpu *CPU) SUB(reg uint8) {
+  val := cpu.reg.a - reg
+  if val == 0 {
+   cpu.reg.SetFlag('z', true)
+  }
+  cpu.reg.SetFlag('n', true)
+  if (reg & 0xf) > (cpu.reg.a & 0xf) {
+    cpu.reg.SetFlag('h', true)
+  }
+  cpu.reg.SetFlag('n', true)
+  if reg > cpu.reg.a {
+    cpu.reg.SetFlag('c', true)
+  }
+  cpu.reg.a = val
 }
 
 func (cpu *CPU) SBC(reg1 uint8, reg2 uint8) uint8 {
   c := cpu.reg.GetFlagVal('c')
   val := reg1 - reg2 - c
   if val == 0 {
-   cpu.reg.SetFlag('z', true)
+    cpu.reg.SetFlag('z', true)
   }
   cpu.reg.SetFlag('n', true)
   cpu.reg.SetFlag('h', (reg1 & 0xF) - (reg2 & 0xF) - c < 0x0)
@@ -124,10 +145,17 @@ func (cpu *CPU) Step(n uint16) {
     cpu.t += 4
     cpu.pc += 1;
 
+  case 0x04:
+    // inc b
+    cpu.t += 4
+    cpu.INC('b')
+    fmt.Printf("inc b")
+    cpu.pc += 1
+
   case 0x05:
     // dec b
     cpu.t += 4
-    cpu.reg.b = cpu.DEC(cpu.reg.b)
+    cpu.DEC('b')
     fmt.Printf("dec b")
     cpu.pc += 1
 
@@ -155,8 +183,15 @@ func (cpu *CPU) Step(n uint16) {
   case 0x0c:
     // inc c
     cpu.t += 4
-    cpu.reg.c = cpu.INC(cpu.reg.c)
+    cpu.INC('c')
     fmt.Printf("inc c")
+    cpu.pc += 1
+
+  case 0x0d:
+    // dec c
+    cpu.t += 4
+    cpu.DEC('c')
+    fmt.Printf("dec c")
     cpu.pc += 1
 
   case 0x0e:
@@ -186,6 +221,20 @@ func (cpu *CPU) Step(n uint16) {
     cpu.reg.a = cpu.mmu.Read(cpu.pc + 1)
     fmt.Printf("ld a de")
     cpu.pc += 1
+
+  case 0x1d:
+    // dec e
+    cpu.t += 4
+    cpu.DEC('e')
+    fmt.Printf("dec e")
+    cpu.pc += 1
+
+  case 0x1e:
+    // ld e nn
+    cpu.t += 8
+    cpu.reg.e = cpu.mmu.Read(cpu.pc + 1)
+    fmt.Printf("ld e 0x%x", cpu.mmu.Read(cpu.pc + 1))
+    cpu.pc += 2
 
   case 0x1f:
     // rra
@@ -226,6 +275,25 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("hl inc")
     cpu.pc += 1
 
+  case 0x24:
+    // inc h
+    cpu.t += 4
+    cpu.INC('h')
+    fmt.Printf("inc h")
+    cpu.pc += 1
+
+  case 0x28:
+    // jr z nn
+    fmt.Printf("jr z nn")
+    if cpu.reg.GetFlag('z') {
+      nn := cpu.mmu.Read(cpu.pc + 1)
+      cpu.pc = cpu.pc + 2 + uint16(nn)
+      cpu.t += 12
+    } else {
+      cpu.t += 8
+      cpu.pc += 2
+    }
+
   case 0x31:
     // ld sp nnnn
     cpu.t += 12
@@ -234,12 +302,19 @@ func (cpu *CPU) Step(n uint16) {
     cpu.pc += 3
 
   case 0x32:
-    // ld (hl-) a -- gb sp
+    // ldd (hl) a -- gb sp
     cpu.t += 8
     hl := cpu.reg.Get16("hl")
     cpu.mmu.Write(hl, cpu.reg.a)
-    cpu.reg.Set16("hl", hl - 1)
-    fmt.Printf("ld (hl-) a")
+    cpu.DEC16("hl")
+    fmt.Printf("ldd (hl) a")
+    cpu.pc += 1
+
+  case 0x34:
+    // inc (hl)
+    cpu.t += 12
+    cpu.INC16("hl")
+    fmt.Printf("inc (hl)")
     cpu.pc += 1
 
   case 0x3e:
@@ -249,11 +324,39 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("ld a 0x%x", cpu.mmu.Read(cpu.pc + 1))
     cpu.pc += 2
 
+  case 0x3d:
+    // dec a
+    cpu.t += 4
+    cpu.DEC('a')
+    fmt.Printf("dec a")
+    cpu.pc += 1
+
   case 0x4f:
     // ld c a
     cpu.t += 4
     cpu.reg.c = cpu.reg.a
     fmt.Printf("ld c a")
+    cpu.pc += 1
+
+  case 0x57:
+    // ld d a
+    cpu.t += 4
+    cpu.reg.d = cpu.reg.a
+    fmt.Printf("ld d a")
+    cpu.pc += 1
+
+  case 0x62:
+    // ld h c
+    cpu.t += 12
+    cpu.sp = uint16(cpu.mmu.ReadWord(cpu.pc + 1))
+    fmt.Printf("ld c h")
+    cpu.pc += 3
+
+  case 0x67:
+    // ld h a
+    cpu.t += 4
+    cpu.reg.h = cpu.reg.a
+    fmt.Printf("ld a h")
     cpu.pc += 1
 
   case 0x77:
@@ -270,6 +373,13 @@ func (cpu *CPU) Step(n uint16) {
     cpu.t += 4
     cpu.reg.a = cpu.reg.e
     fmt.Printf("ld a e")
+    cpu.pc += 1
+
+  case 0x90:
+    // sub b
+    cpu.t += 4
+    cpu.SUB(cpu.reg.b)
+    fmt.Printf("sub b")
     cpu.pc += 1
 
   case 0x9c:
@@ -355,11 +465,27 @@ func (cpu *CPU) Step(n uint16) {
     fmt.Printf("ld (0xff00 + c) a")
     cpu.pc += 1
 
+  case 0xea:
+    // ld (nnnn) a
+    cpu.t += 16
+    nnnn := cpu.mmu.ReadWord(cpu.pc + 1)
+    cpu.mmu.Write(nnnn, cpu.reg.a)
+    fmt.Printf("ld (nnnn) a")
+    cpu.pc += 3
+
+  case 0xf0:
+    // ld (ff00 + nn) a -- gb sp
+    cpu.t += 12
+    nn := uint16(cpu.mmu.Read(cpu.pc + 1))
+    cpu.reg.a = cpu.mmu.Read(0xff00 + nn)
+    fmt.Printf("ld a (0xff00 + 0x%x)", nn)
+    cpu.pc += 2
+
   case 0xfe:
     // cp a n
     cpu.t += 8
     cpu.mmu.Write(0xff00 + uint16(cpu.reg.c), cpu.reg.a)
-    fmt.Printf("ld (0xff00 + c) a")
+    fmt.Printf("cp a n")
     cpu.pc += 1
 
   default:

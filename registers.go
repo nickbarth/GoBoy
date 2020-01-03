@@ -55,6 +55,33 @@ func (r Registers) Get16(reg16 string) uint16 {
   return 0;
 }
 
+func (r Registers) Get(reg byte) uint8 {
+  switch reg {
+    case 'a': return r.a
+    case 'b': return r.b
+    case 'c': return r.c
+    case 'd': return r.d
+    case 'e': return r.e
+    case 'f': return r.f
+    case 'h': return r.h
+    case 'l': return r.l
+  }
+  return 0
+}
+
+func (r Registers) Set(reg byte, val uint8) {
+  switch reg {
+    case 'a': r.a = val
+    case 'b': r.b = val
+    case 'c': r.c = val
+    case 'd': r.d = val
+    case 'e': r.e = val
+    case 'f': r.f = val
+    case 'h': r.h = val
+    case 'l': r.l = val
+  }
+}
+
 // flag register
 // z n h c 0 0 0 0
 // z - zero flag
