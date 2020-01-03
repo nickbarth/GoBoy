@@ -38,21 +38,19 @@ func (r *Registers) Set16(reg16 string, val uint16) {
     case "hl":
       r.h = uint8(val >> 8)
       r.l = uint8(val & 255)
+    default:
+      panic("invalid set16")
   }
 }
 
 func (r Registers) Get16(reg16 string) uint16 {
   switch reg16 {
-  case "af":
-    return uint16(r.a) << 8 | uint16(r.f)
-  case "bc":
-    return uint16(r.b) << 8 | uint16(r.c)
-  case "de":
-    return uint16(r.d) << 8 | uint16(r.e)
-  case "hl":
-    return uint16(r.h) << 8 | uint16(r.l)
+  case "af": return uint16(r.a) << 8 | uint16(r.f)
+  case "bc": return uint16(r.b) << 8 | uint16(r.c)
+  case "de": return uint16(r.d) << 8 | uint16(r.e)
+  case "hl": return uint16(r.h) << 8 | uint16(r.l)
+  default:   panic("invalid get16")
   }
-  return 0;
 }
 
 func (r Registers) Get(reg byte) uint8 {
@@ -65,8 +63,8 @@ func (r Registers) Get(reg byte) uint8 {
     case 'f': return r.f
     case 'h': return r.h
     case 'l': return r.l
+    default:  panic("invalid get")
   }
-  return 0
 }
 
 func (r Registers) Set(reg byte, val uint8) {
@@ -79,6 +77,7 @@ func (r Registers) Set(reg byte, val uint8) {
     case 'f': r.f = val
     case 'h': r.h = val
     case 'l': r.l = val
+    default:  panic("invalid set")
   }
 }
 
@@ -108,28 +107,20 @@ func (r *Registers) SetFlag(flag byte, val bool) {
 
 func (r *Registers) GetFlag(flag byte) bool {
   switch flag {
-  case 'z':
-    return r.f >> 7 == 1
-  case 'n':
-    return r.f & (1 << 6) >> 6 == 1
-  case 'h':
-    return r.f & (1 << 5) >> 5 == 1
-  case 'c':
-    return r.f & (1 << 4) >> 4 == 1
+  case 'z': return r.f >> 7 == 1
+  case 'n': return r.f & (1 << 6) >> 6 == 1
+  case 'h': return r.f & (1 << 5) >> 5 == 1
+  case 'c': return r.f & (1 << 4) >> 4 == 1
+  default:  panic("invalid getflag")
   }
-  return false
 }
 
 func (r *Registers) GetFlagVal(flag byte) uint8 {
   switch flag {
-  case 'z':
-    return r.f >> 7
-  case 'n':
-    return r.f & (1 << 6) >> 6
-  case 'h':
-    return r.f & (1 << 5) >> 5
-  case 'c':
-    return r.f & (1 << 4) >> 4
+  case 'z': return r.f >> 7
+  case 'n': return r.f & (1 << 6) >> 6
+  case 'h': return r.f & (1 << 5) >> 5
+  case 'c': return r.f & (1 << 4) >> 4
+  default:  panic("invalid getflagval")
   }
-  return 0
 }
