@@ -67,7 +67,7 @@ func (r Registers) Get(reg byte) uint8 {
   }
 }
 
-func (r Registers) Set(reg byte, val uint8) {
+func (r *Registers) Set(reg byte, val uint8) {
   switch reg {
     case 'a': r.a = val
     case 'b': r.b = val

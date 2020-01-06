@@ -246,10 +246,10 @@ func (cpu *CPU) Step(n uint16) {
     cpu.pc += uint16(nn)
 
   case 0x1a:
-    // ld a de
+    // ld a (de)
     cpu.t += 8
     cpu.reg.a = cpu.mmu.Read(cpu.reg.Get16("de"))
-    fmt.Printf("ld a de")
+    fmt.Printf("ld a (de)")
     cpu.pc += 1
 
   case 0x1d:
@@ -390,12 +390,11 @@ func (cpu *CPU) Step(n uint16) {
     cpu.pc += 1
 
   case 0x77:
-    // ld (hl-) a
+    // ld (hl) a
     cpu.t += 8
     hl := cpu.reg.Get16("hl")
     cpu.mmu.Write(hl, cpu.reg.a)
-    cpu.reg.Set16("hl", hl - 1)
-    fmt.Printf("ld (hl-) a")
+    fmt.Printf("ld (hl) a")
     cpu.pc += 1
 
   case 0x7b:
@@ -491,7 +490,7 @@ func (cpu *CPU) Step(n uint16) {
     // ld (ff00 + nn) a -- gb sp
     cpu.t += 8
     nn := uint16(cpu.mmu.Read(cpu.pc + 1))
-    cpu.mmu.Write(0xff00 + nn, cpu.reg.a)
+    cpu.mmu.Write(0xff00 | nn, cpu.reg.a)
     fmt.Printf("ld (0xff00 + 0x%x) a", nn)
     cpu.pc += 2
 
