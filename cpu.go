@@ -309,6 +309,14 @@ func (cpu *CPU) Step(n uint16) {
       cpu.pc += 2
     }
 
+  case 0x2e:
+    // ld l nn
+    cpu.t += 8
+    nn := uint8(cpu.mmu.Read(cpu.pc + 1))
+    fmt.Printf("ld l 0x%x", nn)
+    cpu.reg.l = nn
+    cpu.pc += 2
+
   case 0x31:
     // ld sp nnnn
     cpu.t += 12
