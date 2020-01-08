@@ -241,9 +241,9 @@ func (cpu *CPU) Step(n uint16) {
   case 0x18:
     // jr nn
     cpu.t += 12
-    nn := cpu.mmu.Read(cpu.pc + 1)
+    nn := byte(cpu.mmu.Read(cpu.pc + 1))
     fmt.Printf("jr 0x%x", nn)
-    cpu.pc += uint16(nn)
+    cpu.pc += uint16(int8(nn)) + 2
 
   case 0x1a:
     // ld a (de)
