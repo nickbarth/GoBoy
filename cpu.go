@@ -275,9 +275,10 @@ func (cpu *CPU) Step(n uint16) {
 
   case 0x20:
     // jr nz nn
-    fmt.Printf("jr nz 0x%x", cpu.mmu.Read(cpu.pc + 1))
+    nn := byte(cpu.mmu.Read(cpu.pc + 1))
+    fmt.Printf("jr nz 0x%x", nn)
     if !cpu.reg.GetFlag('z') {
-      cpu.pc += uint16(cpu.mmu.Read(cpu.pc + 1))
+      cpu.pc += uint16(int8(nn)) + 2
       cpu.t += 12
     } else {
       cpu.t += 8
