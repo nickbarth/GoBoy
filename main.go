@@ -1,10 +1,18 @@
 package main
 
-func main() {
-  var cpu = NewCPU()
-  cpu.mmu.Load("./bios.bin")
+import "time"
 
-  for n := 0; n < 115; n++ {
-    cpu.Step(cpu.pc)
+func main() {
+  // cpu := NewCPU()
+  gpu := NewGPU()
+
+  // cpu.mmu.Load("./bios.bin")
+
+  now := time.Now()
+
+  for {
+    delta := time.Since(now)
+    now = time.Now()
+    gpu.Run(delta.Microseconds())
   }
 }

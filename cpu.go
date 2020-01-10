@@ -20,7 +20,6 @@ func NewCPU() *CPU {
   }
 }
 
-// cpu instr
 func (cpu *CPU) XOR(reg1 uint8, reg2 uint8) uint8 {
   val := reg1 ^ reg2
   cpu.reg.SetFlag('z', val == 0)
@@ -525,4 +524,8 @@ func (cpu *CPU) Step(n uint16) {
   }
 
   fmt.Printf("\n")
+}
+
+func (cpu *CPU) Run(n uint16) {
+    cpu.Step(cpu.pc)
 }
