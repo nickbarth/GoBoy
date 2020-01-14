@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import _"fmt"
 
 type GPU struct {}
 
@@ -13,5 +13,5 @@ func (gpu *GPU) Step() {
 }
 
 func (gpu *GPU) Run(delta int64) {
-  fmt.Printf("time %d\n", delta)
+  // fmt.Printf("time %d\n", delta)
 }

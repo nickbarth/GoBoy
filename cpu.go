@@ -526,6 +526,6 @@ func (cpu *CPU) Step(n uint16) {
   fmt.Printf("\n")
 }
 
-func (cpu *CPU) Run(n uint16) {
-    cpu.Step(cpu.pc)
+func (cpu *CPU) Run(n int64) {
+    // cpu.Step(cpu.pc)
 }
